@@ -18,5 +18,6 @@ install-omnios:
           gtar -C dist-for-test -xzf *.tar.gz &&
           cd dist-for-test/* &&
           cpan App::cpanminus &&
+          #include? install-various-OSes/install-omnios/extra-modules.inc
           /home/runner/perl5/bin/cpanm --installdeps . &&
           /home/runner/perl5/bin/cpanm -v .
