@@ -1,0 +1,90 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Cwd;
+use File::Basename;
+use File::Find::Rule;
+use File::Slurp;
+
+# need to find this binary, so we can find the nearby templates
+my $this_binary = $0;
+# resolve symlinks
+if(-l $this_binary) {
+    my $link_target = readlink($this_binary);
+    if(index($link_target, '/') == 0) {
+        $this_binary = $link_target;
+    } else {
+        $this_binary = join('/', dirname($this_binary), $link_target);
+    }
+}
+# turn relative path into absolute
+if(index($this_binary, '/') != 0) {
+    $this_binary = join('/', getcwd, $this_binary);
+}
+my $shared_template_dir = join('/', dirname($this_binary), 'standard-templates');
+die("Can't find standard templates for $this_binary\n")
+    unless(-d $shared_template_dir);
+
+die("This should be run from the root of a git checkout, which has .github/workflows and workflow-templates\n")
+    unless(-d '.github/workflows' && -d 'workflow-templates');
+
+chdir('workflow-templates');
+
+my $include_re = qr/^(\s*)#include(\??)\s+(\S+)/;
+
+foreach my $root_template (
+    File::Find::Rule
+        ->file
+        ->name('*.yml')
+        ->in('.')
+) {
+    print "Processing workflow-templates/$root_template\n";
+    open(my $fh, '<', $root_template) || die("Couldn't read workflow-templates/$root_template: $!\n");
+    my @lines = process('  ', <$fh>);
+    close($fh);
+
+    print "Writing to .github/workflows/$root_template\n";
+    open($fh, '>', "../.github/workflows/$root_template") || die("Couldn't write .github/workflows/$root_template\n");
+    print $fh "# Auto-generated file, see workflow-templates/$root_template\n\n";
+    print $fh grep { /\S/ } @lines;
+    close($fh);
+}
+
+sub process {
+    my $diags_indent = shift;
+    my @input_lines  = @_;
+    my @output_lines = ();
+
+    foreach my $line (@input_lines) {
+        if($line =~ /$include_re/) {
+            my($indent, $optional, $filename) = ($1, $2, $3);
+            print "${diags_indent}found #include$2: $3\n";
+            my $done_include = 0;
+            foreach my $candidate_file ($filename, join('/', $shared_template_dir, $filename)) {
+                my @included_lines = read_include($candidate_file);
+                next if(!@included_lines);
+
+                push @output_lines, map { $indent.$_ } @included_lines;
+                $done_include = 1;
+                last;
+            }
+            die("Couldn't #include $filename\n") unless($optional || $done_include);
+        } else {
+            push @output_lines, $line
+        }
+    }
+    if(grep { /$include_re/ } @output_lines) {
+        @output_lines = process("$diags_indent  ", @output_lines);
+    }
+
+    return @output_lines;
+}
+
+sub read_include {
+    my $file = shift;
+    if(!-f $file || !-r $file) { return (); }
+    open(my $fh, '<', $file) || die("Can't read $file: $!");
+    return <$fh>;
+}
