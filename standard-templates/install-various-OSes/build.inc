@@ -7,9 +7,7 @@ build:
     - name: Test and build
       run: |
         cpanm --installdeps .
-        perl Makefile.PL
-        make test
-        make dist
+        #include build-CPAN-dist-with-mb.inc || build-CPAN-dist-with-eumm.inc
     - uses: actions/upload-artifact@v7
       with:
         name: dist-for-install

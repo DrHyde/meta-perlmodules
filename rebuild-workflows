@@ -32,7 +32,7 @@ die("This should be run from the root of a git checkout, which has .github/workf
 
 chdir('workflow-templates');
 
-my $include_re = qr/^(\s*)#include(\??)\s+(\S+)/;
+my $include_re = qr/^(\s*)#include\s+(\S+)(?:\s+\|\|\s+(\S+))?/;
 
 foreach my $root_template (
     File::Find::Rule
@@ -59,10 +59,20 @@ sub process {
 
     foreach my $line (@input_lines) {
         if($line =~ /$include_re/) {
-            my($indent, $optional, $filename) = ($1, $2, $3);
-            print "${diags_indent}found #include$2: $3\n";
+            my($indent, $filename, $alternative) = ($1, $2, $3);
+            print "${diags_indent}found #include: $filename".
+                  ($alternative ? " || $alternative" : '').
+                  "\n";
             my $done_include = 0;
-            foreach my $candidate_file ($filename, join('/', $shared_template_dir, $filename)) {
+            foreach my $candidate_file (
+                map {
+                    $_, join('/', $shared_template_dir, $_)
+                } grep { $_ } ($filename, $alternative)
+            ) {
+                if($candidate_file eq 'null') {
+                    $done_include = 1;
+                    last;
+                }
                 my @included_lines = read_include($candidate_file);
                 next if(!@included_lines);
 
@@ -70,7 +80,7 @@ sub process {
                 $done_include = 1;
                 last;
             }
-            die("Couldn't #include $filename\n") unless($optional || $done_include);
+            die("Couldn't #include $filename\n") unless($done_include);
         } else {
             push @output_lines, $line
         }
