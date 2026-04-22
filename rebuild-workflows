@@ -1,5 +1,27 @@
 #!/usr/bin/env perl
 
+# Looks for .yml files under `workflow-templates` and processes #include
+# directives therein. The results of processing workflow-templates/foo.yml
+# are written to .github/workflows/foo.yml.
+#
+# Syntax:
+#
+# #include foo
+#
+# includes the file `foo`, if it can be found in workflow-templates, or
+# $standard_template_directory/foo, and fails hard if neither can be found.
+# The contents of foo are indented exactly as the #include directive is.
+#
+# #include foo || bar
+#
+# As above, except if neither a project-specific foo or a foo from the standard
+# template directory can be found, goes on to similarly look for bar in both
+# places. If bar can't be found in either, it fails hard. As a special case,
+# it won't even try to read a file called `null` and will pretend it succeeded.
+#
+# This means that as well as over-riding a default with ... || bar you can
+# implement an optional include with ... || null
+
 use strict;
 use warnings;
 
