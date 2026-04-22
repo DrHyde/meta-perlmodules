@@ -8,5 +8,6 @@ install-linux:
       with:
         name: dist-for-install
     - name: Install on Linux
+      #include install-various-OSes/set-env-vars-for-install-linux.inc || null
       run: |
-        cpanm *.tar.gz
+        #include install-various-OSes/install-linux/custom-install-tar-gz.inc || cpanm-install-tar-gz.inc

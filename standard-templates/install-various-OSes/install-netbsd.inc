@@ -6,6 +6,7 @@ install-netbsd:
       with:
         name: dist-for-install
     - name: Install on NetBSD
+      #include install-various-OSes/set-env-vars-for-install-netbsd.inc || null
       uses: cross-platform-actions/action@v0.32.0
       with:
         operating_system: netbsd

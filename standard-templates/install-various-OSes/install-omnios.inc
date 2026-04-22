@@ -6,6 +6,7 @@ install-omnios:
       with:
         name: dist-for-install
     - name: Install on OmniOS
+      #include install-various-OSes/set-env-vars-for-install-omnios.inc || null
       uses: cross-platform-actions/action@v0.32.0
       with:
         operating_system: omnios
