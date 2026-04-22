@@ -75,16 +75,16 @@ foreach my $root_template (
 }
 
 sub process {
-    my $diags_indent = shift;
     my @input_lines  = @_;
     my @output_lines = ();
 
     foreach my $line (@input_lines) {
         if($line =~ /$include_re/) {
             my($indent, $filename, $alternative) = ($1, $2, $3);
-            print "${diags_indent}found #include: $filename".
+            print "  found #include: $filename".
                   ($alternative ? " || $alternative" : '').
-                  "\n";
+                  "\n"
+                if($ENV{REBUILD_WORKFLOW_DEBUG});
             my $done_include = 0;
             foreach my $candidate_file (
                 map {
@@ -92,6 +92,7 @@ sub process {
                 } grep { $_ } ($filename, $alternative)
             ) {
                 if($candidate_file eq 'null') {
+                    print "    processed 'null'\n" if($ENV{REBUILD_WORKFLOW_DEBUG});
                     $done_include = 1;
                     last;
                 }
@@ -99,6 +100,7 @@ sub process {
                 next if(!@included_lines);
 
                 push @output_lines, map { $indent.$_ } @included_lines;
+                print "    processed $candidate_file\n" if($ENV{REBUILD_WORKFLOW_DEBUG});
                 $done_include = 1;
                 last;
             }
@@ -108,7 +110,7 @@ sub process {
         }
     }
     if(grep { /$include_re/ } @output_lines) {
-        @output_lines = process("$diags_indent  ", @output_lines);
+        @output_lines = process(@output_lines);
     }
 
     return @output_lines;
