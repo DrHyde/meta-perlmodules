@@ -7,7 +7,7 @@ build:
     - name: Test and build
       run: |
         cpanm --installdeps .
-        #include build-CPAN-dist-with-mb.inc || build-CPAN-dist-with-eumm.inc
+        #include build-CPAN-dist-custom.inc || build-CPAN-dist-with-eumm.inc
     - uses: actions/upload-artifact@v7
       with:
         name: dist-for-install
