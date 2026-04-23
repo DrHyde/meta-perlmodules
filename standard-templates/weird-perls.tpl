@@ -1,0 +1,30 @@
+on: [push, pull_request]
+name: Weird perls
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        weirdness:
+          #include weird-perls/weirdnesses.inc
+    name: Perl with ${{ matrix.weirdness }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build perl ...
+        run: |
+            curl -L https://install.perlbrew.pl | bash
+            source ~/perl5/perlbrew/etc/bashrc
+            yes|sudo perl -MCPAN -e 'CPAN::Shell->notest("install","Devel::PatchPerl")'
+            perlbrew install --notest ${{ matrix.weirdness }} perl-5.42.0 --as perl-5.42.0-${{ matrix.weirdness }}
+      - name: run tests
+        env:
+          PERL_USE_UNSAFE_INC: 0
+        run: |
+            source ~/perl5/perlbrew/etc/bashrc
+            perlbrew switch perl-5.42.0-${{ matrix.weirdness }}
+            perlbrew install-cpanm
+            cpanm Data::Dumper::Concise
+            perl -MConfig -MData::Dumper::Concise -E 'say Dumper({ build => "${{ matrix.weirdness }}", (map { $_, $Config{$_} } qw(taint_support taint_disabled archname ivsize nvsize))})'
+            cpanm --installdeps .
+            perl Makefile.PL
+            make test
