@@ -1,4 +1,2 @@
-cpanm --installdeps .
-perl Makefile.PL
-make test
+#include configure-test-CPAN-dist-with-eumm.inc
 make dist

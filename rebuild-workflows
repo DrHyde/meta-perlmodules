@@ -8,19 +8,48 @@
 #
 # #include foo
 #
-# includes the file `foo`, if it can be found in workflow-templates, or
-# $standard_template_directory/foo, and fails hard if neither can be found.
-# The contents of foo are indented exactly as the #include directive is.
+#   includes the file `foo`, if it can be found in workflow-templates, or
+#   $standard_template_directory/foo, and fails hard if neither can be found.
+#   The contents of foo are indented exactly as the #include directive is.
 #
 # #include foo || bar
 #
-# As above, except if neither a project-specific foo or a foo from the standard
-# template directory can be found, goes on to similarly look for bar in both
-# places. If bar can't be found in either, it fails hard. As a special case,
-# it won't even try to read a file called `null` and will pretend it succeeded.
+#   As above, except if neither a project-specific foo or a foo from the
+#   standard template directory can be found, goes on to similarly look for bar
+#   in both places. If bar can't be found in either, it fails hard. As a
+#   special case, it won't even try to read a file called `null` and will
+#   pretend it succeeded.
 #
-# This means that as well as over-riding a default with ... || bar you can
-# implement an optional include with ... || null
+#   This means that as well as over-riding a default with ... || bar you can
+#   implement an optional include with ... || null
+#
+# $template_var{variable_name}
+#
+#   Replaced with the contents of a variable. Variables are created by
+#   providing them as arguments to #include thus:
+#
+#     #include foo.inc colour = "red" texture = "smooth" ... [|| ...]
+#
+#   There is a special variable workflow_file_name that always evaluates to the
+#   name of the file currently being processed, with any extention chopped off,
+#   so in this example it would be "foo".
+#
+#   Tnd then in the included template:
+#
+#       #include $template_var{workflow_file_name}/bar.inc
+#       steps:
+#         uses: colour/$template_var{colour}
+#
+#   that would result in:
+#
+#       #include foo/bar.inc
+#       steps:
+#         uses: colour/red
+#
+#   If a variable isn't defined then a default can be given. The default can be
+#   null just like in #include:
+#
+#       name: $template_var{name} || "default name"
 
 use strict;
 use warnings;
