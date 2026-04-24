@@ -1,0 +1,11 @@
+name: success
+jobs:
+  build:
+    steps:
+      - run: |
+          #include local.inc
+          #include shared.inc
+          #include missing.inc || fallback.inc
+          #include unreadable.inc || fallback-after-unreadable.inc
+          #include optional.inc || null
+          #include recursive.inc
