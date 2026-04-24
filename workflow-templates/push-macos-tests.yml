@@ -9,6 +9,6 @@ jobs:
       - name: Setup Perl environment
         uses: shogo82148/actions-setup-perl@v1
       - name: Install test dependencies
-        run: cpanm --notest Devel::Cover File::Find::Rule File::Slurp
+        run: cpanm --notest Template Devel::Cover File::Find::Rule File::Slurp
       - name: Run test suite
         run: prove -v t/*.t
