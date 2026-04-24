@@ -7,7 +7,7 @@ install-freebsd:
         name: dist-for-install
     - name: Install on FreeBSD
       #include install-various-OSes/set-env-vars-for-install-freebsd.inc || null
-      uses: cross-platform-actions/action@v0.32.0
+      uses: cross-platform-actions/action@v1.0.0
       with:
         operating_system: freebsd
         version: 14.2
