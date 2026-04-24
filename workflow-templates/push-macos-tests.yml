@@ -1,0 +1,14 @@
+on: [push]
+name: Run tests on latest macOS
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Perl environment
+        uses: shogo82148/actions-setup-perl@v1
+      - name: Install test dependencies
+        run: cpanm --notest Devel::Cover File::Find::Rule File::Slurp
+      - name: Run test suite
+        run: prove -v t/*.t
