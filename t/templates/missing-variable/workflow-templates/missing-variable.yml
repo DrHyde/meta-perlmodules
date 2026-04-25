@@ -1,0 +1,6 @@
+name: missing variable
+jobs:
+  build:
+    steps:
+      - run: |
+          #include broken.inc

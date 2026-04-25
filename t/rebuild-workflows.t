@@ -182,6 +182,11 @@ jobs:
           fallback line
           fallback after unreadable
           recursive line
+          success
+          otter
+          blue
+          null default: <>
+          adjective: sleek
 END_EXPECTED
         'writes the expanded workflow file',
     );
@@ -262,6 +267,39 @@ END_EXPECTED
 
     isnt($result->{exit}, 0, 'missing include fails');
     like($result->{output}, qr/Couldn't \#include missing\.inc/, 'reports the missing include');
+}
+
+{
+    my $repo = make_repo('missing-variable', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'undefined template variables fail');
+    like($result->{output}, qr/Undefined template variable 'missing'/, 'reports the missing template variable');
+}
+
+{
+    my $repo = make_repo('missing-include-equals', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'missing include equals fails');
+    like($result->{output}, qr/Expected '=' after colour/, 'reports a missing include equals sign');
+}
+
+{
+    my $repo = make_repo('wrong-include-equals', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'wrong include equals fails');
+    like($result->{output}, qr/Expected '=' after colour/, 'reports a non-equals include separator');
 }
 
 {

@@ -9,3 +9,4 @@ jobs:
           #include unreadable.inc || fallback-after-unreadable.inc
           #include optional.inc || null
           #include recursive.inc
+          #include templated.inc animal = "otter" adjective = "sleek"

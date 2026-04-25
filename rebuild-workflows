@@ -83,7 +83,7 @@ die("This should be run from the root of a git checkout, which has .github/workf
 
 chdir('workflow-templates');
 
-my $include_re = qr/^(\s*)#include\s+(\S+)(?:\s+\|\|\s+(\S+))?/;
+my $include_re = qr/^(\s*)#include\s+(\S+)(.*)$/;
 
 foreach my $root_template (
     File::Find::Rule
@@ -93,7 +93,12 @@ foreach my $root_template (
 ) {
     print "Processing workflow-templates/$root_template\n";
     open(my $fh, '<', $root_template) || die("Couldn't read workflow-templates/$root_template: $!\n");
-    my @lines = process('  ', <$fh>);
+    my @lines = process(
+        {
+            workflow_file_name => basename($root_template, '.yml'),
+        },
+        <$fh>,
+    );
     close($fh);
 
     print "Writing to .github/workflows/$root_template\n";
@@ -104,21 +109,22 @@ foreach my $root_template (
 }
 
 sub process {
-    my @input_lines  = @_;
+    my($template_vars, @input_lines) = @_;
     my @output_lines = ();
 
     foreach my $line (@input_lines) {
-        if($line =~ /$include_re/) {
-            my($indent, $filename, $alternative) = ($1, $2, $3);
-            print "  found #include: $filename".
-                  ($alternative ? " || $alternative" : '').
+        my $include = parse_include($line, $template_vars);
+        if($include) {
+            print "  found #include: $include->{filename}".
+                  ($include->{alternative} ? " || $include->{alternative}" : '').
                   "\n"
                 if($ENV{REBUILD_WORKFLOW_DEBUG});
             my $done_include = 0;
+            my %child_template_vars = (%{$template_vars}, %{$include->{vars}});
             foreach my $candidate_file (
                 map {
                     $_, join('/', $shared_template_dir, $_)
-                } grep { $_ } ($filename, $alternative)
+                } grep { defined($_) && length($_) } ($include->{filename}, $include->{alternative})
             ) {
                 if($candidate_file eq 'null') {
                     print "    processed 'null'\n" if($ENV{REBUILD_WORKFLOW_DEBUG});
@@ -128,18 +134,15 @@ sub process {
                 my @included_lines = read_include($candidate_file);
                 next if(!@included_lines);
 
-                push @output_lines, map { $indent.$_ } @included_lines;
+                push @output_lines, map { $include->{indent}.$_ } process(\%child_template_vars, @included_lines);
                 print "    processed $candidate_file\n" if($ENV{REBUILD_WORKFLOW_DEBUG});
                 $done_include = 1;
                 last;
             }
-            die("Couldn't #include $filename\n") unless($done_include);
+            die("Couldn't #include $include->{filename}\n") unless($done_include);
         } else {
-            push @output_lines, $line
+            push @output_lines, interpolate_template_vars($line, $template_vars);
         }
-    }
-    if(grep { /$include_re/ } @output_lines) {
-        @output_lines = process(@output_lines);
     }
 
     return @output_lines;
@@ -150,4 +153,97 @@ sub read_include {
     if(!-f $file || !-r $file) { return (); }
     open(my $fh, '<', $file) || die("Can't read $file: $!");
     return <$fh>;
+}
+
+sub parse_include {
+    my($line, $template_vars) = @_;
+    return unless($line =~ /$include_re/);
+
+    my($indent, $filename, $remainder) = ($1, $2, $3);
+    my @tokens = tokenize_include_remainder($remainder, $line);
+    my %include_vars = ();
+    my $alternative;
+
+    while(@tokens) {
+        my $token = shift(@tokens);
+        if($token eq '||') {
+            $alternative = shift(@tokens);
+            die("Missing fallback in #include line: $line") unless(defined($alternative));
+            die("Unexpected tokens after fallback in #include line: $line") if(@tokens);
+            last;
+        }
+
+        die("Invalid template variable name '$token' in #include line: $line")
+            unless($token =~ /^[A-Za-z_][A-Za-z0-9_]*$/);
+
+        my $equals = shift(@tokens);
+        my $value  = shift(@tokens);
+        die("Expected '=' after $token in #include line: $line")
+            unless(defined($equals) && $equals eq '=');
+        die("Missing value for $token in #include line: $line")
+            unless(defined($value));
+
+        $include_vars{$token} = interpolate_template_vars($value, $template_vars);
+    }
+
+    return {
+        indent      => $indent,
+        filename    => interpolate_template_vars($filename, $template_vars),
+        alternative => defined($alternative)
+            ? interpolate_template_vars($alternative, $template_vars)
+            : undef,
+        vars        => \%include_vars,
+    };
+}
+
+sub tokenize_include_remainder {
+    my($remainder, $line) = @_;
+    my @tokens = ();
+    pos($remainder) = 0;
+
+    while($remainder =~ /\G\s*(\|\||=|"((?:[^"\\]|\\.)*)"|(\S+))/gc) {
+        if(defined($2)) {
+            push @tokens, unescape_quoted($2);
+        } else {
+            push @tokens, $1;
+        }
+    }
+
+    my $leftover = substr($remainder, pos($remainder) || 0);
+    die("Couldn't parse #include line: $line") if($leftover =~ /\S/);
+
+    return @tokens;
+}
+
+sub interpolate_template_vars {
+    my($text, $template_vars) = @_;
+    my $original_text = $text;
+
+    $text =~ s{
+        \$template_var\{([A-Za-z_][A-Za-z0-9_]*)\}
+        (?:\s*\|\|\s*(null|"((?:[^"\\]|\\.)*)"))?
+    }{
+        resolve_template_var($1, defined($2) ? $2 : undef, $template_vars, $original_text)
+    }gex;
+
+    return $text;
+}
+
+sub resolve_template_var {
+    my($name, $default, $template_vars, $line) = @_;
+    return $template_vars->{$name} if(exists($template_vars->{$name}));
+
+    if(defined($default)) {
+        return q{} if($default eq 'null');
+        $default =~ /^"((?:[^"\\]|\\.)*)"$/ || die("Invalid default for template variable $name in line: $line");
+        return unescape_quoted($1);
+    }
+
+    die("Undefined template variable '$name' in line: $line");
+}
+
+sub unescape_quoted {
+    my $value = shift;
+    $value =~ s/\\(.)/$1/g;
+    return $value;
 }

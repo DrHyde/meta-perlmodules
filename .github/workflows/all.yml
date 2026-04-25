@@ -1,4 +1,4 @@
-# Auto-generated file, see workflow-templates/push-macos-tests.yml
+# Auto-generated file, see workflow-templates/all.yml
 
 on: [push]
 name: Run tests on latest macOS
