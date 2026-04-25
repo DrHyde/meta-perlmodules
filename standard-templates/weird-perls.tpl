@@ -1,4 +1,8 @@
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '.github/workflows/weird-perls.yml'
+      - '.github/workflows/run-weird-perls'
 name: Weird perls
 jobs:
   build:

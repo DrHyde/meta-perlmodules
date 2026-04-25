@@ -1,4 +1,8 @@
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '.github/workflows/macos.yml'
+      - '.github/workflows/run-macos'
 name: $template_var{workflow_human_name} || "MacOS"
 
 jobs:
