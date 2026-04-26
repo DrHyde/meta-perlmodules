@@ -58,6 +58,12 @@ sub slurp {
     return <$fh>;
 }
 
+sub normalize_generated_workflow {
+    my($repo, $contents) = @_;
+    $contents =~ s{(# included from ).*/support/standard-templates/}{$1support/standard-templates/}g;
+    return $contents;
+}
+
 sub with_chdir {
     my($dir, $code) = @_;
     my $starting_dir = getcwd();
@@ -167,7 +173,10 @@ sub make_repo {
     like($result->{output}, qr/processed 'null'/, 'logs null fallbacks when debug is enabled');
 
     is(
-        slurp(File::Spec->catfile($repo, '.github', 'workflows', 'success.yml')),
+        normalize_generated_workflow(
+            $repo,
+            slurp(File::Spec->catfile($repo, '.github', 'workflows', 'success.yml')),
+        ),
         <<'END_EXPECTED',
 # Auto-generated file, see workflow-templates/success.yml
 
@@ -176,17 +185,36 @@ jobs:
   build:
     steps:
       - run: |
+          # included from local.inc
           local line 1
           local line 2
+          # end include
+          # included from support/standard-templates/shared.inc
           shared line
+          # end include
+          # included from support/standard-templates/fallback.inc
           fallback line
+          # end include
+          # included from support/standard-templates/fallback-after-empty.inc
+          fallback after empty
+          # end include
+          # included from support/standard-templates/fallback-after-unreadable.inc
           fallback after unreadable
+          # end include
+          # included from support/standard-templates/recursive.inc
+          # included from support/standard-templates/recursive-child.inc
           recursive line
+          # end include
+          # end include
+          # included from support/standard-templates/templated.inc
           success
           otter
           blue
           null default: <>
+          # included from support/standard-templates/success/nested.inc
           adjective: sleek
+          # end include
+          # end include
 END_EXPECTED
         'writes the expanded workflow file',
     );
@@ -248,10 +276,10 @@ END_EXPECTED
 }
 
 {
-    my $repo = make_repo('success', script_dir => 'missing', omit_standard_templates => 1, omit_symlinks => 1);
+    my $repo = make_repo('success', omit_standard_templates => 1, omit_symlinks => 1);
     my $result = run_script(
         cwd     => $repo,
-        command => ['missing/rebuild-workflows'],
+        command => ['support/rebuild-workflows'],
     );
 
     isnt($result->{exit}, 0, 'missing shared templates fails');
@@ -300,6 +328,50 @@ END_EXPECTED
 
     isnt($result->{exit}, 0, 'wrong include equals fails');
     like($result->{output}, qr/Expected '=' after colour/, 'reports a non-equals include separator');
+}
+
+{
+    my $repo = make_repo('missing-fallback', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'missing include fallback fails');
+    like($result->{output}, qr/Missing fallback in \#include line:/, 'reports a missing include fallback');
+}
+
+{
+    my $repo = make_repo('unexpected-after-fallback', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'unexpected tokens after fallback fail');
+    like($result->{output}, qr/Unexpected tokens after fallback in \#include line:/, 'reports unexpected tokens after a fallback');
+}
+
+{
+    my $repo = make_repo('invalid-include-variable', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'invalid include variable names fail');
+    like($result->{output}, qr/Invalid template variable name 'colour-name'/, 'reports invalid include variable names');
+}
+
+{
+    my $repo = make_repo('missing-include-value', omit_symlinks => 1);
+    my $result = run_script(
+        cwd     => $repo,
+        command => ['support/rebuild-workflows'],
+    );
+
+    isnt($result->{exit}, 0, 'missing include values fail');
+    like($result->{output}, qr/Missing value for colour in \#include line:/, 'reports missing include values');
 }
 
 {

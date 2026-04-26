@@ -1,0 +1,6 @@
+name: invalid include variable
+jobs:
+  build:
+    steps:
+      - run: |
+          #include broken.inc colour-name = "blue"

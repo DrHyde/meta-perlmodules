@@ -55,7 +55,7 @@ sub run_command {
     local $ENV{PERL5OPT} = join(
         q{ },
         grep { defined && length }
-            ($ENV{PERL5OPT}, "-MDevel::Cover=-db,$db_dir,-coverage,statement,condition"),
+            ($ENV{PERL5OPT}, "-MDevel::Cover=-db,$db_dir,-coverage,statement,branch,condition"),
     );
     local $ENV{REBUILD_WORKFLOW_TEST_BASE} = $fixture_root;
 
@@ -83,8 +83,8 @@ sub run_command {
         || diag($cover->{stdout}.$cover->{stderr});
     like(
         $cover->{stdout},
-        qr{(?:^|\n)Total\s+100(?:\.0+)?\s+100(?:\.0+)?(?:\s|$)}m,
-        'rebuild-workflows has 100% statement and condition coverage',
+        qr{(?:^|\n)Total\s+100(?:\.0+)?\s+100(?:\.0+)?\s+100(?:\.0+)?(?:\s|$)}m,
+        'rebuild-workflows has 100% statement, branch, and condition coverage',
     );
 }
 

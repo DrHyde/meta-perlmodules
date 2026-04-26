@@ -1,0 +1,2 @@
+env:
+  PERL_USE_UNSAFE_INC: 0

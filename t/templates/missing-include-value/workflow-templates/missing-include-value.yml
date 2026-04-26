@@ -1,0 +1,6 @@
+name: missing include value
+jobs:
+  build:
+    steps:
+      - run: |
+          #include broken.inc colour =

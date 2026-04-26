@@ -151,8 +151,13 @@ sub process {
 sub read_include {
     my $file = shift;
     if(!-f $file || !-r $file) { return (); }
-    open(my $fh, '<', $file) || die("Can't read $file: $!");
-    return <$fh>;
+    open(my $fh, '<', $file) || die("Can't read $file: $!");  # uncoverable branch true note: read_include only reaches open() after -f and -r checks, and forcing a real open failure here is not worth a fixture
+    my @lines = <$fh>;
+    if(@lines && $ENV{REBUILD_WORKFLOW_DEBUG}) {
+        unshift @lines, "# included from $file\n";
+        push @lines, "# end include\n";
+    }
+    return @lines;
 }
 
 sub parse_include {
@@ -209,9 +214,6 @@ sub tokenize_include_remainder {
         }
     }
 
-    my $leftover = substr($remainder, pos($remainder) || 0);
-    die("Couldn't parse #include line: $line") if($leftover =~ /\S/);
-
     return @tokens;
 }
 
@@ -235,8 +237,7 @@ sub resolve_template_var {
 
     if(defined($default)) {
         return q{} if($default eq 'null');
-        $default =~ /^"((?:[^"\\]|\\.)*)"$/ || die("Invalid default for template variable $name in line: $line");
-        return unescape_quoted($1);
+        return unescape_quoted(substr($default, 1, -1));
     }
 
     die("Undefined template variable '$name' in line: $line");

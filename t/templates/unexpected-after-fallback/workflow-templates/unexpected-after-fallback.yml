@@ -1,0 +1,6 @@
+name: unexpected after fallback
+jobs:
+  build:
+    steps:
+      - run: |
+          #include broken.inc || fallback.inc extra
