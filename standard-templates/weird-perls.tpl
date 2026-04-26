@@ -29,6 +29,4 @@ jobs:
             perlbrew install-cpanm
             cpanm Data::Dumper::Concise
             perl -MConfig -MData::Dumper::Concise -E 'say Dumper({ build => "${{ matrix.weirdness }}", (map { $_, $Config{$_} } qw(taint_support taint_disabled archname ivsize nvsize))})'
-            cpanm --installdeps .
-            perl Makefile.PL
-            make test
+            #include configure-test-CPAN-dist-with-eumm.inc
