@@ -15,4 +15,5 @@ jobs:
       - name: Test and build
         run: |
           #include $template_var{workflow_file_name}/extra-modules.inc || null
-          #include configure-test-CPAN-dist-with-eumm.inc
+          #include pre-configure-CPAN-dist.inc || null
+          #include $template_var{workflow_file_name}/configure-test-CPAN-dist.inc || configure-test-CPAN-dist-with-eumm.inc
