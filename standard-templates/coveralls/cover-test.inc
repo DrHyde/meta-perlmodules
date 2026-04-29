@@ -1,0 +1,1 @@
+cover -test -report Coveralls

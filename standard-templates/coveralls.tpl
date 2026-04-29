@@ -1,0 +1,24 @@
+on:
+  push:
+    paths:
+      - '.github/workflows/coveralls.yml'
+      - '.github/workflows/run-coveralls'
+name: Generate Coveralls report
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: 5.42
+      - name: Run with coverage checking
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          perl -v
+          cpanm Devel::Cover::Report::Coveralls
+          #include coveralls/extra-dependencies.inc || null
+          #include pre-configure-CPAN-dist.inc || null
+          cpanm --installdeps .
+          #include coveralls/cover-test.inc
