@@ -4,8 +4,11 @@ on:
     paths:
       - '.github/workflows/windows.yml'
       - '.github/workflows/run-windows'
+
+#include no-concurrency.inc
 jobs:
   build:
+    #include dont-autotest-dependabot.inc
     runs-on: windows-latest
     strategy:
       fail-fast: false

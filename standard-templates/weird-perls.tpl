@@ -3,9 +3,12 @@ on:
     paths:
       - '.github/workflows/weird-perls.yml'
       - '.github/workflows/run-weird-perls'
+
+#include no-concurrency.inc
 name: Weird perls
 jobs:
   build:
+    #include dont-autotest-dependabot.inc
     runs-on: "ubuntu-latest"
     strategy:
       matrix:

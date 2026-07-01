@@ -1,4 +1,5 @@
 install-openbsd:
+  #include dont-autotest-dependabot.inc
   runs-on: ubuntu-latest
   needs: build
   steps:

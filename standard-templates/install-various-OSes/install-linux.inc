@@ -1,4 +1,5 @@
 install-linux:
+  #include dont-autotest-dependabot.inc
   runs-on: 'ubuntu-latest'
   needs: build
   container:

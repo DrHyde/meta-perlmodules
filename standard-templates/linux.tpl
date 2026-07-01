@@ -3,10 +3,13 @@ on:
     paths:
       - '.github/workflows/$template_var{workflow_file_name}.yml'
       - '.github/workflows/run-$template_var{workflow_file_name}'
+
+#include no-concurrency.inc
 name: $template_var{workflow_human_name} || "Linux"
 
 jobs:
   list:
+    #include dont-autotest-dependabot.inc
     name: list available perl versions
     runs-on: 'ubuntu-latest'
     steps:

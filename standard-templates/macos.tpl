@@ -3,10 +3,13 @@ on:
     paths:
       - '.github/workflows/macos.yml'
       - '.github/workflows/run-macos'
+
+#include no-concurrency.inc
 name: $template_var{workflow_human_name} || "MacOS"
 
 jobs:
   build:
+    #include dont-autotest-dependabot.inc
     #include $template_var{workflow_file_name}/runs-on.inc
     steps:
       - uses: actions/checkout@v6

@@ -3,9 +3,12 @@ on:
     paths:
       - '.github/workflows/coveralls.yml'
       - '.github/workflows/run-coveralls'
+
+#include no-concurrency.inc
 name: Generate Coveralls report
 jobs:
   build:
+    #include dont-autotest-dependabot.inc
     runs-on: 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v6

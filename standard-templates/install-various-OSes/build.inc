@@ -1,4 +1,5 @@
 build:
+  #include dont-autotest-dependabot.inc
   runs-on: 'macos-latest'
   steps:
     - uses: actions/checkout@v6

@@ -3,6 +3,8 @@ on:
     paths:
       - '.github/workflows/install-various-OSes.yml'
       - '.github/workflows/run-install-various-OSes'
+
+#include no-concurrency.inc
 name: Install on various OSes
 jobs:
   #include install-various-OSes/build.inc
