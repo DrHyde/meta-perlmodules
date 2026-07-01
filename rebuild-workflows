@@ -103,7 +103,8 @@ foreach my $root_template (
 
     print "Writing to .github/workflows/$root_template\n";
     open($fh, '>', "../.github/workflows/$root_template") || die("Couldn't write .github/workflows/$root_template\n");
-    print $fh "# Auto-generated file, see workflow-templates/$root_template\n\n";
+    print $fh "# Auto-generated file, see workflow-templates/$root_template\n";
+    print $fh "# To rebuild, see rebuild-workflows in https://github.com/DrHyde/meta-perlmodules\n\n";
     print $fh grep { /\S/ } @lines;
     close($fh);
 }

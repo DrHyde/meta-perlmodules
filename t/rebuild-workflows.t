@@ -179,6 +179,7 @@ sub make_repo {
         ),
         <<'END_EXPECTED',
 # Auto-generated file, see workflow-templates/success.yml
+# To rebuild, see rebuild-workflows in https://github.com/DrHyde/meta-perlmodules
 
 name: success
 jobs:
