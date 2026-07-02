@@ -2,7 +2,7 @@ build:
   #include dont-autotest-dependabot.inc
   runs-on: 'macos-latest'
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Setup Perl environment
       uses: shogo82148/actions-setup-perl@v1
     - name: Test and build

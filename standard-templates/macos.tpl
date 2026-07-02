@@ -12,7 +12,7 @@ jobs:
     #include dont-autotest-dependabot.inc
     #include $template_var{workflow_file_name}/runs-on.inc
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Perl environment
         uses: shogo82148/actions-setup-perl@v1
       - name: Test and build

@@ -8,7 +8,7 @@ install-openbsd:
         name: dist-for-install
     - name: Install on OpenBSD
       #include install-various-OSes/set-env-vars-for-install-openbsd.inc || null
-      uses: cross-platform-actions/action@v1.0.0
+      uses: cross-platform-actions/action@v1.3.0
       with:
         operating_system: openbsd
         version: 7.4

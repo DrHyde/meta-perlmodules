@@ -16,7 +16,7 @@ jobs:
           #include weird-perls/weirdnesses.inc
     name: Perl with ${{ matrix.weirdness }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Build perl ...
         run: |
             curl -L https://install.perlbrew.pl | bash

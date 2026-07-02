@@ -16,7 +16,7 @@ jobs:
         perl-version:
         #include windows/perl-versions.inc
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up perl
       uses: shogo82148/actions-setup-perl@v1
       with:
